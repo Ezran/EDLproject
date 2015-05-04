@@ -63,15 +63,16 @@ void loop() {
        delay(100);
       if (menuIndex == 0) { //------------------ trip mode selected
        LCD_Serial.print("Trip mode selected.");
-       delay(500);
+       delay(1000);
        LCD_Serial.write(12);
+       delay(5);
       
        //begin gps code
        tripMode();
       }
        else if (menuIndex == 1) { //------------- distance mode selected
         LCD_Serial.print("Distance mode\n selected.");
-        delay(500);
+        delay(1000);
         LCD_Serial.write(12);
         
         //begin distance gps code
@@ -82,17 +83,18 @@ void loop() {
 
 void tripMode() {
   for(;;){
-    updateGPS();
+    //updateGPS();
   float lat1, lon1;
        float lat2, lon2;
        float totalDistance;
+       unsigned long age;
        
        //float lat1, lon1;
-       gps.f_get_position(&lat1, &lon1);
+       //gps.f_get_position(&lat1, &lon1);
        LCD_Serial.write(12); // Clear LCD
        delay(5);
        LCD_Serial.print("Trip Started");
-       gps.f_get_position(&lat1, &lon1);
+       gps.f_get_position(&lat1, &lon1, &age);
        delay(2000);
        LCD_Serial.write(12); // Clear LCD
        delay(5);
@@ -100,7 +102,7 @@ void tripMode() {
 
       do {
         gps.f_get_position(&lat2, &lon2);
-        totalDistance = totalDistance + (unsigned long)TinyGPS::distance_between(lat1, lon1, lat2, lon2);
+        totalDistance = totalDistance + TinyGPS::distance_between(lat1, lon1, lat2, lon2);
         delay(2000);
       } while (butSelect == LOW);
 
@@ -115,7 +117,8 @@ void tripMode() {
 void distMode() {
   //get first gps data here
   float lat1, lon1;
-  gps.f_get_position(&lat1, &lon1);
+  unsigned long age;
+  gps.f_get_position(&lat1, &lon1, &age);
   Serial.println(lat1);
   Serial.println(lon1);
   Serial.println("---------");
@@ -128,10 +131,11 @@ void distMode() {
      LCD_Serial.write(12); // Clear LCD
      delay(5);
      float lat2, lon2;
-     gps.f_get_position(&lat2, &lon2);
+     unsigned long age;
+     gps.f_get_position(&lat2, &lon2, &age);
      Serial.println(lat2);
-  Serial.println(lon2);
-     float Distance = (unsigned long)TinyGPS::distance_between(lat1, lon1, lat2, lon2);
+     Serial.println(lon2);
+     float Distance = TinyGPS::distance_between(lat1, lon1, lat2, lon2);
      LCD_Serial.println("Total Distance (m)");
      LCD_Serial.print(Distance); 
      while(true){/*end*/};
