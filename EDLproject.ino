@@ -20,10 +20,12 @@ unsigned long start = millis();
 TinyGPS gps;
 SoftwareSerial LCD_Serial = SoftwareSerial(255, LCD_pin); // RX, TX
 SoftwareSerial nss(10, 255);
+SoftwareSerial bt(255,3);
 
 
 void setup() {
   Serial.begin(115200);
+  bt.begin(9600); //bluetooth serial
   LCD_Serial.begin(9600); // Begin serial communication.
   LCD_Serial.write(12); // Clear LCD
   delay(5); // delay after clearing screen
@@ -34,6 +36,7 @@ void setup() {
   nss.begin(9600); // Communicate at 9600 baud (default for PAM-7Q module)
   Serial.println("Reading GPS");
     LCD_Serial.print("Choose a mode");
+    bt.println("Bluetooth connected.");
 }
 
 // Get and process GPS data
@@ -82,6 +85,11 @@ void loop() {
 }
 
 void tripMode() {
+  float lats[1000];
+  float lons[1000];
+  int   times[1000];
+  int index = 1;
+  
   float totalDistance = 0;
   float old_lat, old_lon; 
   float new_lat, new_lon;
@@ -89,6 +97,7 @@ void tripMode() {
   while(!updateGPS())
       Serial.println("Waiting for init gps data");
   gps.f_get_position(&new_lat,&new_lon);
+  lats[0] = new_lat; lons[0] = new_lon; times[0] = millis();
   
   LCD_Serial.write(12); // Clear LCD
   delay(5);
@@ -105,7 +114,10 @@ void tripMode() {
       
     old_lat = new_lat; old_lon = new_lon;
     gps.f_get_position(&new_lat, &new_lon);
-    
+    if (index < 1000) {
+      lats[index] = new_lat; lons[index] = new_lon; times[index] = millis(); index++;
+    }
+
     float delta = TinyGPS::distance_between(old_lat, old_lon, new_lat, new_lon);
     Serial.println(delta);
     Serial.println(totalDistance);
@@ -116,9 +128,17 @@ void tripMode() {
         delay(5);
       LCD_Serial.println("Total Distance (m)");
       LCD_Serial.print(totalDistance);
-      delay(2000);
-         while(true){/*end*/}
+         for(int i = 0; i <= index; i++){
+           bt.println(times[i]); 
+           delay(2);
+           bt.println(lats[i]);
+           delay(2); 
+           bt.println(lons[i]);
+           delay(2);
+         }
+         while(true){/*end*/};
       }
+      delay(1000);
    }
 }
 
@@ -126,6 +146,8 @@ void distMode() {
   while (!updateGPS())
      Serial.println("Waiting for valid start gps data");
   
+  int start_time = millis();
+  int end_time;
   float lat1, lon1;
   gps.f_get_position(&lat1, &lon1);
   Serial.println(lat1);
@@ -144,12 +166,29 @@ void distMode() {
      while(!updateGPS())
          Serial.println("Waiting for valid end gps data point");
      
+     end_time = millis();
      gps.f_get_position(&lat2, &lon2);
      Serial.println(lat2);
      Serial.println(lon2);
      LCD_Serial.println("Total Distance (m)");
      LCD_Serial.print(TinyGPS::distance_between(lat1, lon1, lat2, lon2)); 
-     while(true){/*end*/};
+     while(true){ //upload to bluetooth
+         bt.print("Time:  ");
+         delay(5);
+         bt.println(end_time-start_time);
+         delay(5);
+         bt.println(lat1);
+         delay(5);
+         bt.println(lon1);
+         bt.println("");
+         delay(5);
+         bt.println(lat2);
+         delay(5);
+         bt.println(lon2);
+         
+         Serial.print("BT Transfer Success");
+         while(true){/*end*/};
+     };
    }
   }
 }
@@ -162,38 +201,3 @@ bool updateGPS() {
   }
   return false;
 }
-
-// Get and process GPS data
-void gpsdump(TinyGPS &gps) {
-  float lat1, lon1;
-  unsigned long age;
-  gps.f_get_position(&lat1, &lon1, &age);
-  //Serial.print(flat, 4); Serial.print(", ");
-  //Serial.println(flon, 4);
-  //  float lat2, lon2;
-  //  gps.f_get_position(&lat2, &lon2);
-  //  (unsigned long)TinyGPS::distance_between(lat1, lon1, lat2, lon2);
-}
-
-
-/*******************************************************************************
-GPS Code
-Straight-Line Distance
-*******************************************************************************/
-
-//void
-//gps.f_get_position(&lat2, &lon2);
-//TinyGPS::(distance_Between(lat1, lon1,lat2, lon2)*1.09361);
-
-
-
-/*******************************************************************************
-GPS Code
-Trip Distance
-*******************************************************************************/
-
-
-
-
-
-
