@@ -6,6 +6,6 @@ for x in range(1,150):
 
 f = open('alt.txt','w')
 for d in dat:
-	f.write(str(d) + '\n')
+	f.write(str(d) + ",")
 f.close()
 	
