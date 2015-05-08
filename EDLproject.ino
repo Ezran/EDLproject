@@ -129,11 +129,14 @@ void tripMode() {
       LCD_Serial.println("Total Distance (m)");
       LCD_Serial.print(totalDistance);
          for(int i = 0; i <= index; i++){
-           bt.println(times[i]); 
+           bt.println(times[i]);
+           bt.println('\n\n'); 
            delay(2);
            bt.println(lats[i]);
+           bt.println('\n\n');
            delay(2); 
            bt.println(lons[i]);
+           bt.println('\n\n');
            delay(2);
          }
          while(true){/*end*/};
@@ -176,15 +179,19 @@ void distMode() {
          bt.print("Time:  ");
          delay(5);
          bt.println(end_time-start_time);
+         bt.println('\n\n');
          delay(5);
          bt.println(lat1);
+         bt.println('\n\n');
          delay(5);
          bt.println(lon1);
-         bt.println("");
+         bt.println('\n\n');
          delay(5);
          bt.println(lat2);
+         bt.println('\n\n');
          delay(5);
          bt.println(lon2);
+         bt.println('\n\n');
          
          Serial.print("BT Transfer Success");
          while(true){/*end*/};
